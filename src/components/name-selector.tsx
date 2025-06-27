@@ -13,7 +13,7 @@ export default function NameSelector() {
   useEffect(() => {
     const channel = pusher.subscribe("names-channel");
 
-    channel.bind("name-submitted", (data) => {
+    channel.bind("name-submitted", (data: { name: string }) => {
       setSubmittedNames((prev) => [...prev, data.name]);
     });
 

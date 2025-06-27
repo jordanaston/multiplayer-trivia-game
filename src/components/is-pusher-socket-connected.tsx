@@ -10,7 +10,7 @@ export default function IsPusherSocketConnected() {
   useEffect(() => {
     const channel = pusher.subscribe("my-channel");
 
-    channel.bind("my-event", function (data) {
+    channel.bind("my-event", function (data: Record<string, unknown>) {
       setLastMessage(JSON.stringify(data));
     });
 
