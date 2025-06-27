@@ -18,8 +18,19 @@ export const API_ENDPOINTS = {
 export const apiService = {
   // Pusher related
   submitName: async (name: string) => {
-    const response = await api.post(API_ENDPOINTS.PUSHER, { name });
+    const response = await api.post(API_ENDPOINTS.PUSHER, {
+      name,
+      action: "submit-name",
+    });
     return response.data;
+  },
+
+  // Get current state for synchronization
+  getNames: async () => {
+    const response = await api.post(API_ENDPOINTS.PUSHER, {
+      action: "get-names",
+    });
+    return response.data.names;
   },
 
   // Add more API functions here

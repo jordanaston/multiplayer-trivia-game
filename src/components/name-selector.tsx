@@ -9,12 +9,34 @@ import { apiService } from "../lib/api";
 export default function NameSelector() {
   const [name, setName] = useState("");
   const [submittedNames, setSubmittedNames] = useState<string[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+
+  const syncWithServer = async () => {
+    try {
+      const serverNames = await apiService.getNames();
+      setSubmittedNames(serverNames);
+    } catch (error) {
+      console.error("Error syncing with server:", error);
+    }
+  };
 
   useEffect(() => {
+    syncWithServer();
+
     const channel = pusher.subscribe("names-channel");
 
     channel.bind("name-submitted", (data: { name: string }) => {
       setSubmittedNames((prev) => [...prev, data.name]);
+    });
+
+    pusher.connection.bind("connected", () => {
+      setIsConnected(true);
+
+      syncWithServer();
+    });
+
+    pusher.connection.bind("disconnected", () => {
+      setIsConnected(false);
     });
 
     return () => {
@@ -44,8 +66,12 @@ export default function NameSelector() {
         className="w-64"
       />
       <Button onClick={handleSubmit}>Submit</Button>
+
       <p className="text-lg font-semibold mt-12">Submitted Names:</p>
 
+      {!isConnected && (
+        <p className="text-sm text-orange-500">Syncing with server...</p>
+      )}
       {submittedNames.length > 0 && (
         <>
           <div className="space-y-1">

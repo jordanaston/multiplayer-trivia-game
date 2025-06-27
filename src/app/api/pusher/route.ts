@@ -9,17 +9,29 @@ const pusher = new Pusher({
   useTLS: true,
 });
 
+const submittedNames: string[] = [];
+
 export async function POST(request: NextRequest) {
   try {
-    const { name } = await request.json();
+    const { name, action } = await request.json();
 
-    await pusher.trigger("names-channel", "name-submitted", { name });
+    if (action === "submit-name") {
+      submittedNames.push(name);
 
-    return NextResponse.json({ success: true });
+      await pusher.trigger("names-channel", "name-submitted", { name });
+
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === "get-names") {
+      return NextResponse.json({ names: submittedNames });
+    }
+
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
-    console.error("Error broadcasting name:", error);
+    console.error("Error in Pusher API:", error);
     return NextResponse.json(
-      { error: "Failed to broadcast name" },
+      { error: "Failed to process request" },
       { status: 500 }
     );
   }
