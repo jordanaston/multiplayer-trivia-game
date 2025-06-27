@@ -5,11 +5,22 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { pusher } from "../pusher";
 import { apiService } from "../lib/api";
+import { useMutation } from "@tanstack/react-query";
 
 export default function NameSelector() {
   const [name, setName] = useState("");
   const [submittedNames, setSubmittedNames] = useState<string[]>([]);
   const [isConnected, setIsConnected] = useState(false);
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: apiService.submitName,
+    onSuccess: () => {
+      setName("");
+    },
+    onError: (error) => {
+      console.error("Error submitting name:", error);
+    },
+  });
 
   const syncWithServer = async () => {
     try {
@@ -44,14 +55,9 @@ export default function NameSelector() {
     };
   }, []);
 
-  const handleSubmit = async () => {
-    if (name.trim()) {
-      try {
-        await apiService.submitName(name);
-        setName("");
-      } catch (error) {
-        console.error("Error submitting name:", error);
-      }
+  const handleSubmit = () => {
+    if (name) {
+      mutate(name.trim());
     }
   };
 
@@ -64,14 +70,18 @@ export default function NameSelector() {
         value={name}
         onChange={(e) => setName(e.target.value)}
         className="w-64"
+        disabled={isPending}
       />
-      <Button onClick={handleSubmit}>Submit</Button>
+      <Button onClick={handleSubmit} disabled={isPending}>
+        {isPending ? "Submitting..." : "Submit"}
+      </Button>
 
       <p className="text-lg font-semibold mt-12">Submitted Names:</p>
 
       {!isConnected && (
         <p className="text-sm text-orange-500">Syncing with server...</p>
       )}
+
       {submittedNames.length > 0 && (
         <>
           <div className="space-y-1">
