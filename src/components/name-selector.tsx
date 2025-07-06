@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { pusher } from "../pusher";
-import { apiService } from "../lib/api";
-import { useMutation } from "@tanstack/react-query";
+import { submitName, getNames } from "../lib/api/pusher";
+import { getPlayers } from "../lib/api/players";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 export default function NameSelector() {
   const [name, setName] = useState("");
@@ -13,7 +14,7 @@ export default function NameSelector() {
   const [isConnected, setIsConnected] = useState(false);
 
   const { mutate, isPending } = useMutation({
-    mutationFn: apiService.submitName,
+    mutationFn: submitName,
     onSuccess: () => {
       setName("");
     },
@@ -24,7 +25,7 @@ export default function NameSelector() {
 
   const syncWithServer = async () => {
     try {
-      const serverNames = await apiService.getNames();
+      const serverNames = await getNames();
       setSubmittedNames(serverNames);
     } catch (error) {
       console.error("Error syncing with server:", error);
@@ -61,6 +62,11 @@ export default function NameSelector() {
     }
   };
 
+  const { data: players } = useQuery({
+    queryKey: ["players"],
+    queryFn: getPlayers,
+  });
+
   return (
     <div className="flex flex-col items-center gap-4 mt-8">
       <p className="text-2xl">Name Selector</p>
@@ -93,6 +99,16 @@ export default function NameSelector() {
           </div>
         </>
       )}
+
+      <p className="text-lg font-semibold mt-12">Players:</p>
+
+      <div className="space-y-1">
+        {players?.map((player: { name: string }, index: number) => (
+          <p key={index} className="text-lg text-chart-1">
+            {player.name}
+          </p>
+        ))}
+      </div>
     </div>
   );
 }
